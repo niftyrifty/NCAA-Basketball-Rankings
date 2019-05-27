@@ -1,0 +1,39 @@
+---
+title: "P3ReproducibilityIndex"
+author: "Rifayat Uddin"
+date: "4/10/2019"
+output: html_document
+---
+Overview
+--
+
+
+```{R}
+library(dplyr)
+#Read in the data
+security_wide <- read.csv('http://dept.stat.lsa.umich.edu/~bbh/s485/data/security_wide.csv') 
+
+head(security_wide)
+
+fs_items = c(paste0('q38',c('c','d','h','g','n')),'q40a','q38f')
+security_wide_fs = security_wide[c("school", fs_items)]
+head(security_wide_fs, 3)
+security_wide_fs%>% complete.cases()%>% table()
+
+#Simple Index
+sum_index <- security_wide_fs%>% na.omit()%>%dplyr::select(-school)%>% rowSums()
+table(sum_index)
+
+#Rasch Index
+security_tall_fs0 <-security_wide_fs%>% na.omit()%>%tidyr::gather("item", "response",-school)
+head(security_tall_fs0, 3)
+
+#Rasch Model
+#I think we need a for-loop here to get the schools rach_indices to get that correctly
+rasch0 <- glm(response~item+school -1,family=binomial, data=security_tall_fs0)
+head(coef(rasch0), 10)
+
+rasch0_index <- c(schoolid1011=0,coef(rasch0)[-(1:7)])
+table(round(rasch0_index))
+table(sum_index)
+```
